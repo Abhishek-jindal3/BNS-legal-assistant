@@ -1,4 +1,3 @@
-# agent.py
 
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
@@ -9,24 +8,19 @@ from langchain_core.tools import tool
 from config import LLM_MODEL
 
 
-# --------------------------------------------------
-# Create BNS agent and rewrite chain
-# --------------------------------------------------
+# ------------------Create BNS agent and rewrite chain
+
 
 def create_bns_agent(retriever, format_docs):
 
-    # --------------------------------------------------
-    # Main LLM
-    # --------------------------------------------------
+    
 
     llm = ChatNVIDIA(
         model=LLM_MODEL
     )
 
 
-    # --------------------------------------------------
-    # BNS RAG TOOL
-    # --------------------------------------------------
+    #------RAG TOOL
 
     @tool
     def bns_rag(query: str) -> str:
@@ -44,9 +38,7 @@ def create_bns_agent(retriever, format_docs):
         return format_docs(results)
 
 
-    # --------------------------------------------------
-    # LLM TOOL CALLING
-    # --------------------------------------------------
+   #---------TOOL CALLING
 
     retrieval_llm = llm.bind_tools(
         [bns_rag],
@@ -54,9 +46,7 @@ def create_bns_agent(retriever, format_docs):
     )
 
 
-    # --------------------------------------------------
-    # FINAL ANSWER PROMPT
-    # --------------------------------------------------
+  #---------FINAL PROMPT
 
     answer_prompt = ChatPromptTemplate.from_messages([
         (
@@ -104,15 +94,11 @@ Retrieved BNS context:
     )
 
 
-    # --------------------------------------------------
-    # CONTROLLED AGENT
-    # --------------------------------------------------
+    #-----------AGENT
 
     def run_agent(question):
 
-        # --------------------------------------------------
-        # Ask LLM to make ONE tool call
-        # --------------------------------------------------
+        # ASK LLM TO TOOL CALL
 
         tool_request = retrieval_llm.invoke(
             question
@@ -132,9 +118,9 @@ Retrieved BNS context:
             )
 
 
-        # --------------------------------------------------
-        # Execute ONLY THE FIRST tool call
-        # --------------------------------------------------
+       
+        # -------------Execute ONLY THE FIRST tool call
+        
 
         tool_call = tool_calls[0]
 
@@ -147,15 +133,15 @@ Retrieved BNS context:
         )
 
 
-        # Actual BNS tool execution
+        # -----------------Actual BNS tool execution
         context = bns_rag.invoke(
             retrieval_query
         )
 
 
-        # --------------------------------------------------
-        # Generate final answer
-        # --------------------------------------------------
+        
+        #-------------- Generate final answer
+        
 
         answer = answer_chain.invoke({
             "question": question,
@@ -166,9 +152,9 @@ Retrieved BNS context:
         return answer
 
 
-    # --------------------------------------------------
-    # QUESTION REWRITING
-    # --------------------------------------------------
+    
+    # --------------------QUESTION REWRITING
+  
 
     rewrite_prompt = ChatPromptTemplate.from_messages([
         (
@@ -212,9 +198,9 @@ Latest question:
     ])
 
 
-    # --------------------------------------------------
-    # Separate LLM for rewriting
-    # --------------------------------------------------
+   
+    #------------------- Separate LLM for rewriting
+  
 
     rewrite_llm = ChatNVIDIA(
         model=LLM_MODEL
@@ -228,8 +214,8 @@ Latest question:
     )
 
 
-    # --------------------------------------------------
-    # Return controlled agent + rewrite chain
-    # --------------------------------------------------
+    
+    # ------------------Return controlled agent + rewrite chain
+    
 
     return run_agent, rewrite_chain
