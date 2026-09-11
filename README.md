@@ -83,7 +83,7 @@ The goal is to provide answers based specifically on the retrieved BNS content r
 🔑 Key Features
 1. Agentic RAG
 Instead of directly passing every query to a fixed retrieval chain, the system uses an LLM-based agent that can decide to call the bns_rag retrieval tool.
-
+'''text
 User Question
       ↓
 Agent
