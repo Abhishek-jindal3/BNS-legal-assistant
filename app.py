@@ -1,4 +1,3 @@
-# app.py
 
 import streamlit as st
 
@@ -12,9 +11,7 @@ from agent import create_bns_agent
 from conversation import run_chat
 
 
-# --------------------------------------------------
-# Page configuration
-# --------------------------------------------------
+# -----------------Page configuration-----------------
 
 st.set_page_config(
     page_title="BNS Legal Assistant",
@@ -23,9 +20,9 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# Load AI resources
-# --------------------------------------------------
+
+# -----------------Load AI resources----------------
+
 
 @st.cache_resource
 def load_resources():
@@ -47,9 +44,8 @@ def load_resources():
 
 
 
-# --------------------------------------------------
-# Page title
-# --------------------------------------------------
+
+# -------------------Page title---------------
 
 st.title("⚖️ BNS Legal Assistant")
 
@@ -58,18 +54,16 @@ st.caption(
 )
 
 
-# --------------------------------------------------
-# Initialize Streamlit chat history
-# --------------------------------------------------
+
+# --------------------Initialize Streamlit chat history-----------------------
 
 if "messages" not in st.session_state:
 
     st.session_state.messages = []
 
 
-# --------------------------------------------------
-# Display previous messages
-# --------------------------------------------------
+# ---------------------Display previous messages-------------------
+
 
 for message in st.session_state.messages:
 
@@ -82,18 +76,17 @@ for message in st.session_state.messages:
         )
 
 
-# --------------------------------------------------
-# User input
-# --------------------------------------------------
+
+# -------------------User input-----------------
+
 
 query = st.chat_input(
     "Ask a question about the BNS..."
 )
 
 
-# --------------------------------------------------
-# Process user question
-# --------------------------------------------------
+
+# --------------------------Process user question------------
 
 if query:
 
