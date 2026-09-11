@@ -1,55 +1,55 @@
 # ⚖️ Bharatiya Nyaya Sanhita Legal Assistant
 
-An AI-powered legal question-answering system built using **Agentic RAG (Retrieval-Augmented Generation)** to answer questions from the **Bharatiya Nyaya Sanhita (BNS), 2023**.
+An AI-powered legal question-answering system built using **Agentic RAG (Retrieval-Augmented Generation)** to answer questions based on the **Bharatiya Nyaya Sanhita (BNS), 2023**.
 
-The system retrieves relevant BNS provisions from the official BNS document and uses an LLM to generate concise, context-grounded answers.
-
----
+The system retrieves relevant BNS provisions from the source document and uses an LLM to generate concise, context-grounded responses.
 
 ## 🚀 Project Overview
 
-The Bharatiya Nyaya Sanhita Legal Assistant allows users to ask questions related to offences, punishments, and provisions under the BNS, 2023.
+The **Bharatiya Nyaya Sanhita Legal Assistant** allows users to ask questions related to offences, punishments, and provisions under the BNS, 2023.
 
-The system combines:
+Unlike a simple question-answering system, this project uses an **agentic architecture** where the LLM can call a dedicated retrieval tool to search the BNS knowledge base before generating the final response.
 
-- Large Language Models (LLMs)
-- Retrieval-Augmented Generation (RAG)
-- Vector similarity search
-- Tool calling
-- Conversational query rewriting
-- ChromaDB
+### Key Technologies
+
+- Python
 - LangChain
-- NVIDIA AI endpoints
+- Agentic RAG
+- Large Language Models (LLMs)
+- NVIDIA AI Endpoints
+- NVIDIA Embeddings
+- ChromaDB
 - Streamlit
+- PyPDFLoader
+- RecursiveCharacterTextSplitter
 
-The goal is to provide answers based specifically on the retrieved BNS content rather than relying on general model knowledge.
+## 🏗️ System Architecture
 
----
-
-## 🏗️ Architecture
-
+```text
                          User Query
                              │
                              ▼
                   ┌─────────────────────┐
                   │ Conversation Layer  │
+                  │  History Management │
                   └──────────┬──────────┘
                              │
                              ▼
                   ┌─────────────────────┐
-                  │ Query Rewriting     │
-                  │   LLM               │
+                  │  Query Rewriting    │
+                  │        LLM          │
                   └──────────┬──────────┘
                              │
-                    Standalone Query
+                       Standalone Query
                              │
                              ▼
                   ┌─────────────────────┐
-                  │   BNS Agent         │
-                  │   LLM + Tool Call  │
+                  │     BNS Agent       │
+                  │    LLM + Tool       │
+                  │      Calling        │
                   └──────────┬──────────┘
                              │
-                        Tool Call
+                         Tool Call
                              │
                              ▼
                   ┌─────────────────────┐
@@ -60,75 +60,85 @@ The goal is to provide answers based specifically on the retrieved BNS content r
                              ▼
                   ┌─────────────────────┐
                   │      ChromaDB       │
-                  │ Vector Similarity   │
-                  │      Search         │
+                  │  Vector Similarity  │
+                  │       Search        │
                   └──────────┬──────────┘
                              │
-                       Relevant BNS
+                      Relevant BNS
                         Sections
                              │
                              ▼
                   ┌─────────────────────┐
-                  │     Final LLM       │
-                  │  Answer Generation  │
+                  │      Final LLM      │
+                  │   Answer Generation │
                   └──────────┬──────────┘
                              │
                              ▼
-                         Final Answer
+                        Final Answer
+```
 
+## 🔑 Key Features
 
+### 🤖 Agentic RAG
 
+The project uses an **agentic RAG architecture** instead of a fixed retrieval chain.
 
+The LLM is connected to a custom `bns_rag` retrieval tool that retrieves relevant BNS provisions before generating the final answer.
 
-🔑 Key Features
-1. Agentic RAG
-Instead of directly passing every query to a fixed retrieval chain, the system uses an LLM-based agent that can decide to call the bns_rag retrieval tool.
-''' text
-                           User Question
-                                ↓
-                              Agent
-                                ↓
-                            Tool Call
-                                ↓
-                            BNS Retrieval
-                                 ↓
-                           Relevant Sections
-                                  ↓
-                            Final Answer
- 
+```text
+User Question
+      ↓
+BNS Agent
+      ↓
+Tool Call
+      ↓
+bns_rag
+      ↓
+ChromaDB Retrieval
+      ↓
+Relevant BNS Sections
+      ↓
+Final LLM
+      ↓
+Final Answer
+```
 
+### 🔎 Semantic Search with ChromaDB
 
-Base
-The BNS PDF is processed into individual sections.
-Each section is stored as a document with metadata such as:
-{
-    "source": "BNS_2023.pdf",
-    "section": 103
-}
-This allows the system to associate retrieved text with its corresponding BNS section.
+The BNS document is divided into section-level documents and converted into vector embeddings using **NVIDIA Embeddings**.
 
+These embeddings are stored in **ChromaDB**.
 
-
-3. Semantic Search with ChromaDB
-BNS sections are converted into vector embeddings using NVIDIA embeddings.
-These embeddings are stored in ChromaDB.
 When a user asks a question, semantic similarity search retrieves the most relevant BNS sections.
 
+### 🛠️ Tool Calling
 
+The retrieval functionality is exposed to the LLM as a LangChain tool:
 
-4. Tool Calling
-The agent exposes a retrieval tool:
+```python
 @tool
 def bns_rag(query: str) -> str:
-    ...
+    """
+    Retrieve relevant sections and text
+    from the Bharatiya Nyaya Sanhita, 2023.
+    """
+
+    results = retriever.invoke(query)
+
+    return format_docs(results)
+```
+
 The LLM generates a structured tool call containing the retrieval query.
-The application then executes the tool and passes the retrieved BNS context to the final answer-generation step.
 
+The application executes the tool and passes the retrieved BNS context to the final answer-generation step.
 
+### 💬 Conversational Query Rewriting
 
-5. Conversational Query Rewriting
-The system supports follow-up questions.
+The system supports multi-turn conversations by converting follow-up questions into standalone retrieval queries.
+
 For example:
+
+```text
 User:
 What is the punishment for murder?
 
@@ -137,64 +147,98 @@ Under Section 103...
 
 User:
 What if it is done by a minor?
+```
 
-The second question depends on the previous conversation.
-The system rewrites it into a standalone retrieval query before performing retrieval.
+The second question depends on the previous conversation, so the system rewrites it into a standalone retrieval query:
 
+```text
 "What if it is done by a minor?"
-
               ↓
+"How does the BNS deal with a minor who commits murder?"
+```
 
-"How does the BNS deal with a minor
-who commits murder?"
-This improves retrieval for multi-turn conversations.
+This improves retrieval for context-dependent follow-up questions.
 
+## 📚 BNS Document Processing
 
+The BNS PDF is processed through the following pipeline:
 
-📚 BNS Document Processing
-
-The PDF processing pipeline is:
-
-
+```text
 BNS PDF
    ↓
 PyPDFLoader
    ↓
 Extract Full Text
    ↓
-Detect Section Numbers
+Detect BNS Section Numbers
    ↓
-Create Section Documents
+Create Section-Level Documents
    ↓
 Split Large Sections
    ↓
 Generate Embeddings
    ↓
 Store in ChromaDB
+```
 
-Large sections are divided using:
-RecursiveCharacterTextSplitter
-while preserving the original section metadata.
+Large sections are divided using `RecursiveCharacterTextSplitter` while preserving the original section metadata.
 
-🛠️ Technologies Used
+Each section contains metadata such as:
 
-Python
-LangChain
-RAG and agent architecture
-NVIDIA AI Endpoints
-Embeddings and LLM
-ChromaDB
-Vector database
-PyPDFLoader
-PDF processing
-Supporting utilities
-Streamlit
-User interface
-RecursiveCharacterTextSplitter
+```python
+{
+    "source": "BNS_2023.pdf",
+    "section": 103
+}
+```
 
+This allows retrieved content to be associated with its corresponding BNS section.
 
+## 🧠 Query Processing Flow
 
-📁 Project Structure
+```text
+User Question
+      ↓
+Conversation History
+      ↓
+Query Rewriting
+      ↓
+Standalone Query
+      ↓
+BNS Agent
+      ↓
+Generate Tool Call
+      ↓
+bns_rag Retrieval Tool
+      ↓
+ChromaDB Similarity Search
+      ↓
+Relevant BNS Sections
+      ↓
+Final LLM
+      ↓
+Context-Grounded Answer
+```
+
+For the first question, query rewriting is skipped because there is no previous conversation context.
+
+For follow-up questions, conversation history is used to resolve contextual references before retrieval.
+
+## 🛠️ Technologies Used
+
+| Technology | Purpose |
+|------------|---------|
+| Python | Core development |
+| LangChain | Agent and RAG architecture |
+| NVIDIA AI Endpoints | LLM and embedding models |
+| ChromaDB | Vector database |
+| PyPDFLoader | PDF document loading |
+| RecursiveCharacterTextSplitter | Document chunking |
+| Streamlit | Web interface |
+
+## 📁 Project Structure
+
+```text
 BNS-Legal-Assistant/
 │
 ├── app.py
@@ -210,92 +254,164 @@ BNS-Legal-Assistant/
 ├── chroma_db/
 │
 └── README.md
+```
 
+## 📄 File Description
 
-📄 File Description
-app.py
-Provides the Streamlit user interface and manages the chat session.
+### `app.py`
 
-bns_loader.py
+Provides the Streamlit-based user interface and manages the chat session.
+
+### `bns_loader.py`
+
 Handles:
-PDF loading
-Section detection
-Section-level document creation
-Chunking of large sections
 
-vector_store.py
+- Loading the BNS PDF
+- Extracting text
+- Detecting BNS section numbers
+- Creating section-level documents
+- Splitting large sections
+
+### `vector_store.py`
+
 Handles:
-NVIDIA embeddings
-ChromaDB
-Vector store creation
-Retriever configuration
-Formatting retrieved documents
 
-agent.py
+- NVIDIA embeddings
+- ChromaDB
+- Vector store creation
+- Retriever configuration
+- Formatting retrieved documents
+
+### `agent.py`
+
 Contains:
-NVIDIA LLM
-BNS retrieval tool
-Tool calling
-Agent logic
-Final answer generation
-Query rewriting chain
 
-conversation.py
+- NVIDIA LLM
+- BNS retrieval tool
+- Tool calling
+- Agent logic
+- Final answer generation
+- Query rewriting chain
+
+### `conversation.py`
+
 Handles:
-Conversation history
-Follow-up questions
-Query rewriting
-Session-based chat history
 
-test.py
-Provides a terminal-based interface for testing the assistant without Streamlit.
+- Conversation history
+- Follow-up questions
+- Query rewriting
+- Session-based conversations
 
+### `test.py`
 
+Provides a terminal-based interface for testing the assistant without using Streamlit.
 
+## 💡 Example Queries
 
-🎯 Design Principles
+The system can answer questions such as:
+
+```text
+What is the punishment for murder under BNS?
+
+What is the punishment for theft?
+
+Which section deals with criminal intimidation?
+
+What if the offence is committed by a minor?
+
+What is the punishment for an attempt to commit murder?
+```
+
+It also supports contextual follow-up questions:
+
+```text
+User:
+What is the punishment for murder?
+
+Assistant:
+[Answer based on relevant BNS section]
+
+User:
+What if it is done by a minor?
+
+Assistant:
+[Answer based on the contextualized query]
+```
+
+## 🎯 Design Principles
+
 The system follows these principles:
-Answers should be grounded in retrieved BNS content.
-Relevant BNS sections should be mentioned whenever available.
-The system should not rely on IPC provisions.
-The model should not invent sections or punishments.
-If retrieved information is insufficient, the assistant should clearly state that.
 
+- Answers should be grounded in retrieved BNS content.
+- Relevant BNS sections should be mentioned whenever available.
+- The system should not rely on IPC provisions.
+- The model should not invent sections, offences, punishments, or legal provisions.
+- If the retrieved context is insufficient, the assistant should clearly state that.
+- Conversation history should be used to resolve references in follow-up questions.
 
+## ⚙️ Installation
 
+Clone the repository:
 
-🔮 Future Improvements
-Possible improvements include:
-Hybrid keyword + vector retrieval
-Section-aware reranking
-Metadata filtering
-Source citations in the UI
-Streaming responses
-Persistent conversation memory
-Evaluation using a dedicated legal QA dataset
-Improved retrieval for closely related BNS provisions
-Deployment using Docker and cloud infrastructure
+```bash
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd BNS-Legal-Assistant
+```
 
+Install the required dependencies:
 
+```bash
+pip install -r requirements.txt
+```
 
+Set your NVIDIA API key.
 
+### Windows PowerShell
 
+```powershell
+$env:NVIDIA_API_KEY="YOUR_API_KEY"
+```
 
-Disclaimer
-This project is intended for educational and research purposes.
+> **Important:** Never hard-code your API key or commit it to GitHub.
+
+## ▶️ Running the Application
+
+### Streamlit Application
+
+```bash
+streamlit run app.py
+```
+
+The application will open in your browser.
+
+### Terminal Testing
+
+```bash
+python test.py
+```
+
+## 🔮 Future Improvements
+
+- Hybrid keyword + vector retrieval
+- Section-aware reranking
+- Metadata-based filtering
+- Source citations in the user interface
+- Streaming responses
+- Persistent conversation memory
+- Dedicated legal QA evaluation dataset
+- Improved retrieval for closely related BNS provisions
+- Docker-based deployment
+- Cloud deployment
+
+## ⚠️ Disclaimer
+
+This project is developed for **educational and research purposes**.
+
 It is not a substitute for professional legal advice. Users should consult a qualified legal professional for advice regarding actual legal matters.
 
+## 👨‍💻 Author
 
+**Abhishek Jindal**
 
-
-
-👨‍💻 Author
-Abhishek Jindal
-B.Tech – Computer Science and Engineering
+B.Tech – Computer Science and Engineering  
 Dr. B. R. Ambedkar National Institute of Technology Jalandhar
-
-
-
-
-
-
