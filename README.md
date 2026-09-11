@@ -28,7 +28,6 @@ The goal is to provide answers based specifically on the retrieved BNS content r
 
 ## 🏗️ Architecture
 
-```text
                          User Query
                              │
                              ▼
@@ -76,6 +75,9 @@ The goal is to provide answers based specifically on the retrieved BNS content r
                              │
                              ▼
                          Final Answer
+
+
+
 
 
 🔑 Key Features
