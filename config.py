@@ -9,7 +9,7 @@ COLLECTION_NAME = "bns_2023"
 
 
 # NVIDIA models
-EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"
+EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"  # You can use models according to your availablity
 LLM_MODEL = "nvidia/nemotron-3.5-lightning-30b-a3b"
 
 
