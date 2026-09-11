@@ -55,9 +55,8 @@ def get_vectorstore():
     return vectorstore
 
 
-# --------------------------------------------------
-# Create retriever
-# --------------------------------------------------
+
+# ---------------------------Create retriever --------------------------------------------------
 
 def get_retriever():
 
@@ -77,9 +76,7 @@ def get_retriever():
     return retriever
 
 
-# --------------------------------------------------
-# Format retrieved BNS documents
-# --------------------------------------------------
+# -------------------------------------- Format retrieved BNS documents ------------------------------------------
 
 def format_docs(docs):
 
