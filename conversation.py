@@ -6,9 +6,9 @@ import time
 conversation_store = {}
 
 
-# --------------------------------------------------
-# Get conversation history
-# --------------------------------------------------
+
+# --------------------------Get conversation history----------------------
+
 
 def get_history(session_id):
 
@@ -19,9 +19,9 @@ def get_history(session_id):
     return conversation_store[session_id]
 
 
-# --------------------------------------------------
-# Convert messages into text
-# --------------------------------------------------
+
+# -------------------Convert messages into text-------------
+
 
 def format_history(messages):
 
@@ -46,9 +46,9 @@ def format_history(messages):
     return "\n".join(history)
 
 
-# --------------------------------------------------
-# Clean rewritten question
-# --------------------------------------------------
+
+# -----------------Clean rewritten question-------------
+
 
 def clean_rewritten_question(text):
 
@@ -80,9 +80,8 @@ def clean_rewritten_question(text):
     return text
 
 
-# --------------------------------------------------
-# Run one complete chat interaction
-# --------------------------------------------------
+#------------------------ Run one complete chat interaction------------------
+
 
 def run_chat(
     query,
@@ -91,25 +90,25 @@ def run_chat(
     rewrite_chain
 ):
 
-    total_start = time.perf_counter()
+    
 
 
-    # --------------------------------------------------
-    # Get conversation history
-    # --------------------------------------------------
+    
+    #------------------------- Get conversation history-----------------------
+    
 
     messages = get_history(session_id)
 
     history = format_history(messages)
 
 
-    # --------------------------------------------------
-    # Rewrite follow-up questions
-    # --------------------------------------------------
+    
+    # --------------------Rewrite follow-up questions------------------
+    
 
     if history:
 
-        rewrite_start = time.perf_counter()
+       
 
 
         rewritten = rewrite_chain.invoke({
@@ -126,22 +125,7 @@ def run_chat(
         )
 
 
-        rewrite_time = (
-            time.perf_counter()
-            - rewrite_start
-        )
-
-
-        print(
-            f"\nRewrite time: {rewrite_time:.2f}s"
-        )
-
-        print(
-            "Rewritten query:",
-            standalone_query
-        )
-
-
+        
     else:
 
         standalone_query = query
@@ -152,32 +136,18 @@ def run_chat(
         )
 
 
-    # --------------------------------------------------
-    # Run controlled agent
-    # --------------------------------------------------
 
-    agent_start = time.perf_counter()
+    #---------------- Run controlled agent------------------
+    
 
-
-    answer = agent(
+     answer = agent(
         standalone_query
     )
 
 
-    agent_time = (
-        time.perf_counter()
-        - agent_start
-    )
 
-
-    print(
-        f"Agent time: {agent_time:.2f}s"
-    )
-
-
-    # --------------------------------------------------
-    # Save original conversation
-    # --------------------------------------------------
+    
+    # ------------------Save original conversation-----------------
 
     messages.append(
         HumanMessage(
@@ -192,19 +162,6 @@ def run_chat(
     )
 
 
-    # --------------------------------------------------
-    # Total time
-    # --------------------------------------------------
-
-    total_time = (
-        time.perf_counter()
-        - total_start
-    )
-
-
-    print(
-        f"Total time: {total_time:.2f}s"
-    )
 
 
     return answer
